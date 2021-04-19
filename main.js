@@ -2,6 +2,7 @@ const fs = require('fs');
 const Concat = require('concat-with-sourcemaps');
 const writeFile = require('write');
 const uglify = require('uglify-js');
+const path = require('path')
 
 //
 // CORE JAX
@@ -43,6 +44,41 @@ const input = {
         '/jax/input/AsciiMath/jax.js'
     ],
     MathML: [
+        '/jax/input/MathML/config.js',
+        '/jax/input/MathML/jax.js',
+        '/jax/input/MathML/entities/scr.js',
+        '/jax/input/MathML/entities/opf.js',
+        '/jax/input/MathML/entities/z.js',
+        '/jax/input/MathML/entities/g.js',
+        '/jax/input/MathML/entities/r.js',
+        '/jax/input/MathML/entities/p.js',
+        '/jax/input/MathML/entities/m.js',
+        '/jax/input/MathML/entities/q.js',
+        '/jax/input/MathML/entities/t.js',
+        '/jax/input/MathML/entities/w.js',
+        '/jax/input/MathML/entities/f.js',
+        '/jax/input/MathML/entities/v.js',
+        '/jax/input/MathML/entities/e.js',
+        '/jax/input/MathML/entities/k.js',
+        '/jax/input/MathML/entities/x.js',
+        '/jax/input/MathML/entities/c.js',
+        '/jax/input/MathML/entities/n.js',
+        '/jax/input/MathML/entities/a.js',
+        '/jax/input/MathML/entities/j.js',
+        '/jax/input/MathML/entities/u.js',
+        '/jax/input/MathML/entities/b.js',
+        '/jax/input/MathML/entities/i.js',
+        '/jax/input/MathML/entities/l.js',
+        '/jax/input/MathML/entities/y.js',
+        '/jax/input/MathML/entities/fr.js',
+        '/jax/input/MathML/entities/o.js',
+        '/jax/input/MathML/entities/s.js',
+        '/jax/input/MathML/entities/d.js',
+        '/jax/input/MathML/entities/h.js',
+    ],
+    TeX_MathML: [
+        '/jax/input/TeX/config.js',
+        '/jax/input/TeX/jax.js',
         '/jax/input/MathML/config.js',
         '/jax/input/MathML/jax.js',
         '/jax/input/MathML/entities/scr.js',
@@ -249,6 +285,35 @@ const extensions = {
         '/extensions/jsMath2jax.js',
         '/extensions/fast-preview.js',
         '/extensions/Safe.js'
+    ],
+
+    TeX_MathML: [
+        '/extensions/tex2jax.js',
+        '/extensions/TeX/AMScd.js',
+        '/extensions/TeX/AMSmath.js',
+        '/extensions/TeX/AMSsymbols.js',
+        '/extensions/TeX/HTML.js',
+        '/extensions/TeX/action.js',
+        '/extensions/TeX/autobold.js',
+        '/extensions/TeX/bbox.js',
+        '/extensions/TeX/boldsymbol.js',
+        '/extensions/TeX/cancel.js',
+        '/extensions/TeX/color.js',
+        '/extensions/TeX/enclose.js',
+        '/extensions/TeX/extpfeil.js',
+        '/extensions/TeX/mathchoice.js',
+        '/extensions/TeX/mediawiki-texvc.js',
+        '/extensions/TeX/mhchem.js',
+        '/extensions/TeX/newcommand.js',
+        '/extensions/TeX/unicode.js',
+        // '/extensions/TeX/autoload-all.js',
+        // '/extensions/TeX/begingroup.js',
+        // '/extensions/TeX/noErrors.js',
+        // '/extensions/TeX/noUndefined.js',
+        '/extensions/TeX/verb.js',
+        '/extensions/mml2jax.js',
+        '/extensions/MathML/content-mathml.js',
+        '/extensions/MathML/mml3.js'
     ]
 }
 // NOTE:
@@ -1038,7 +1103,7 @@ const mathjaxStart = array[0];
 const mathjaxEnd = splitter + array[1];
 
 // SETUP file path
-const unpackedPath = require.resolve('mathjax').replace(/\/MathJax.js$/, '');
+const unpackedPath = require.resolve('mathjax').replace(/(\/|\\)MathJax.js$/, '');
 
 // helper function to generate configuration information
 const preConfig = function (array) {
@@ -1065,7 +1130,7 @@ exports.build = function (font, inputJax, outputJax, options = defaultOptions) {
     if (!options.webfontURL) options.webfontURL = defaultOptions.webfontURL;
 
     // check parameters
-    const inputJaxs = ['TeX', 'MathML', 'AsciiMath'];
+    const inputJaxs = ['TeX', 'MathML', 'AsciiMath', 'TeX_MathML'];
     const outputJaxs = ['CommonHTML', 'SVG', 'PreviewHTML', 'HTML-CSS'];
     const fontNames = ['TeX', 'STIX-Web', 'Asana Math', 'Gyre Pagella', 'Gyre Termes', 'Neo Euler'];
     if (inputJaxs.indexOf(inputJax) === -1) {
@@ -1100,8 +1165,8 @@ exports.build = function (font, inputJax, outputJax, options = defaultOptions) {
     // Complication 2
     // Helper for top-level fontdata files
     // (need to be loaded before other font resources)
-    const fontdataName = '/jax/output/' + outputJax + '/fonts/' + font + '/fontdata.js';
-    const fontdataExtraName = '/jax/output/' + outputJax + '/fonts/' + font + '/fontdata-extra.js'
+    const fontdataName = path.join('/jax/output/', outputJax, '/fonts/', font, '/fontdata.js');
+    const fontdataExtraName = path.join('/jax/output/', outputJax, '/fonts/', font, '/fontdata-extra.js');
 
     // set-up concatenation
     const concat = new Concat(true, 'MathJax.js', '\n');
@@ -1130,7 +1195,7 @@ exports.build = function (font, inputJax, outputJax, options = defaultOptions) {
     ));
 
     // add main bulk of files
-    for (let item of fileNames) concat.add(item, fs.readFileSync(unpackedPath + item));
+    for (let item of fileNames) concat.add(item, fs.readFileSync(path.join(unpackedPath, item)));
 
     // if CommonHTML or HTML-CSS is used, update webfont location
     if (outputJax === "CommonHTML" || outputJax === "HTML-CSS") {
@@ -1138,8 +1203,8 @@ exports.build = function (font, inputJax, outputJax, options = defaultOptions) {
     }
 
     // add top-level fontdata
-    concat.add('fontdata.js', fs.readFileSync(unpackedPath + fontdataName));
-    concat.add('fontdata-extra.js', fs.readFileSync(unpackedPath + fontdataExtraName));
+    concat.add('fontdata.js', fs.readFileSync(path.join(unpackedPath, fontdataName)));
+    concat.add('fontdata-extra.js', fs.readFileSync(path.join(unpackedPath, fontdataExtraName)));
 
     // Complication 3, part 1
     // remaining font-data needs wrapper to get signal from outputJax
@@ -1147,7 +1212,7 @@ exports.build = function (font, inputJax, outputJax, options = defaultOptions) {
 
     // add remaining fontdata
     // NOTE for SVG output, this includes the actual 'fonts' (js files with SVG path data for each glyph)
-    for (let item of fonts[outputJax][font]) concat.add(item, fs.readFileSync(unpackedPath + item));
+    for (let item of fonts[outputJax][font]) concat.add(item, fs.readFileSync(path.join(unpackedPath, item)));
 
     // Complication 3, part 2
     concat.add(null, ' });\n');
@@ -1157,16 +1222,16 @@ exports.build = function (font, inputJax, outputJax, options = defaultOptions) {
 
     let result = concat.content;
     if (options.toFile) {
-        writeFile('dist/' + options.folder + '/MathJax.js', result, function (err) {
+        writeFile(path.join('dist/', options.folder, '/MathJax.js'), result, function (err) {
             if (err) console.log(err);
-            console.log('dist/' + options.folder + '/MathJax.js')
+            console.log(path.join('dist/', options.folder, '/MathJax.js'))
         });
     }
     if (options.compress) result = uglify.minify(result.toString()).code;
     if (options.toFile && options.compress) {
-        writeFile('dist/' + options.folder + '/MathJax.min.js', result, function (err) {
+        writeFile(path.join('dist/', options.folder, '/MathJax.min.js'), result, function (err) {
             if (err) console.log(err);
-            console.log('dist/' + options.folder + '/MathJax.min.js')
+            console.log(path.join('dist/', options.folder, '/MathJax.min.js'))
         })
     }
     return result;

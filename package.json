@@ -16,5 +16,8 @@
     "mathjax": "2.7.5",
     "uglify-js": "^3.0.0",
     "write": "^1.0.0"
+  },
+  "dependencies": {
+    "path": "^0.12.7"
   }
 }
